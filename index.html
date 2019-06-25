@@ -1,0 +1,1174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1"><title>
+    Earlyfares :: ONLINE FLIGHT TICKET BOOKING - ONLINE FLIGHT BOOKING SERVICE
+</title><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="/images/theme/favicon.png" />
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+    <script src="//ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js"></script>
+    <script src="/scripts/jquery-ui.min.js"></script>
+    <link id="JqueryStyleSheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/start/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <script src="/scripts/jsvalidations.js?v=21.21.0" type="text/javascript"></script>
+    <noscript>
+        <meta http-equiv="refresh" content="0;URL=JSError" />
+    </noscript>
+    <script src="/scripts/minified/bootstrap.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" /><link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700" />
+    <link rel='stylesheet' type='text/css' href="/styles/bootstrap.css?v=21.21.0" />
+    <link rel='stylesheet' type='Text/css' href="/styles/default.css?v=21.21.0" />
+
+    
+    <link href="/styles/template.css?v=21.21.0 " rel="stylesheet" />
+    
+    <script type="text/javascript" src="/js/webwidget_slideshow_dot.js"></script>
+    <script type="text/javascript" src="/js/jquery.cookie.js"></script>
+    <script type="text/javascript">
+var flightSearch = {
+    loadAirports: function () {
+        fnInitializeAutoComplete();
+        var escapeRegex;
+        $('input[etitle="airports"]').autocomplete({
+            selectFirst: true,
+            source: function (request, response) {
+
+                //cannot be moved to a seperate function as process is asynchronous
+                $.ajax({
+                    async: false,
+                    type: "POST",
+                    url: "WebAPIService.asmx/GetMatchingAirports",
+                    data: "{ type: '" + $("input[name=flightType]:checked").val() + "', param: '" + $.ui.autocomplete.escapeRegex(request.term) + "'}",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (data) {
+                    
+                        response($.grep(data.d, function (item) {
+                            return true;
+                        }));
+                    },
+                    error: function (result) {
+
+                        //alert('Service call failed: ' + result.status + '' + result.statusText + ' ' + result.responseText);
+                    }
+                });
+            },
+            //source: airports,
+            minLength: 3,
+            autoFocus: false,
+            select: function (event, ui) {
+
+                //prevent default action
+                event.preventDefault();
+                //set selcted city name to text box
+                $(this).val(ui.item.label);
+                if ($(this).attr('id') == 'txtSource') {
+                    // set selected city id to hidden field
+                    $('#hdnSelectedSource').val(ui.item.value);
+                    $('#txtDestination').focus();
+                } else if ($(this).attr('id') == 'txtDestination') {
+                    // set selected city id to hidden field
+                    $('#hdnSelectedDestination').val(ui.item.value);
+                    $('#txtDOJ').focus();
+                }
+                if ($("input[name=trip]:checked").val() == "4") {
+                    if ($(this).attr('id') == 'txtSource1') {
+                        // set selected city id to hidden field
+                        $('#hdnSelectedSource1').val(ui.item.value);
+                        $('#txtDestination1').focus();
+                    } else if ($(this).attr('id') == 'txtDestination1') {
+                        // set selected city id to hidden field
+                        $('#hdnSelectedDestination1').val(ui.item.value);
+                        $('#txtDOJ1').focus();
+                    }
+                    if ($(this).attr('id') == 'txtSource2') {
+                        // set selected city id to hidden field
+                        $('#hdnSelectedSource2').val(ui.item.value);
+                        $('#txtDestination2').focus();
+                    } else if ($(this).attr('id') == 'txtDestination2') {
+                        // set selected city id to hidden field
+                        $('#hdnSelectedDestination2').val(ui.item.value);
+                        $('#txtDOJ2').focus();
+                    }
+                    if ($(this).attr('id') == 'txtSource3') {
+                        // set selected city id to hidden field
+                        $('#hdnSelectedSource3').val(ui.item.value);
+                        $('#txtDestination3').focus();
+                    } else if ($(this).attr('id') == 'txtDestination3') {
+                        // set selected city id to hidden field
+                        $('#hdnSelectedDestination3').val(ui.item.value);
+                        $('#txtDOJ3').focus();
+                    }
+                }
+            },
+            focus: function (event, ui) {
+                //prevent default action
+                event.preventDefault();
+                //set selcted city name to text box
+                //$(this).val(ui.item.label);
+            },
+            change: function (event, ui) {
+                //check if entered value is a valid city 
+                if (ui.item == null) {
+                    alert('Please enter valid city');
+                    $(this).focus();
+                }
+            }
+        });
+    },
+    bindAdults: function (count) {
+        $("#ddlAdults").empty();
+        $("#ddlChildren").empty();
+        $("#ddlInfants").empty();
+        //bind dropdowns
+        for (var i = 0; i < count; i++) {
+            if (i != 0)
+                $("#ddlAdults").append($("<option />").attr("value", i).text('0' + i));
+            $("#ddlChildren").append($("<option />").attr("value", i).text('0' + i));
+            $("#ddlInfants").append($("<option />").attr("value", i).text('0' + i));
+        }
+    },
+    validateSearch: function (value) {
+
+        //validations
+        if ($.trim($('#hdnSelectedSource').val()) == "") {
+            alert("Please enter the From Location");
+            return false;
+        }
+        if ($.trim($('#hdnSelectedDestination').val()) == "") {
+            alert("Please enter the To Location");
+            return false;
+        }
+        if ($.trim($('#hdnSelectedSource').val()) == $.trim($('#hdnSelectedDestination').val())) {
+            alert("From and To locations can't be same");
+            return false;
+        }
+        if ($.trim($('#txtDOJ').val()) == "") {
+            alert("Please Select the Depart Date");
+            return false;
+        }
+
+        var SearchI = {
+            Source: $.trim($('#hdnSelectedSource').val()),
+            SourceName: $.trim($('#txtSource').val()),
+            Destination: $.trim($('#hdnSelectedDestination').val()),
+            DestinationName: $.trim($('#txtDestination').val()),
+            JourneyDate: $.trim($('#txtDOJ').val()),
+        }
+        var Search = JSON.stringify(SearchI);
+        var Search1 = "";
+        var Search2 = "";
+        var Search3 = "";
+
+        if ($("input[name=trip]:checked").val() == "4") {
+            if ($('#divmul-1').is(':visible')) {
+                if ($.trim($('#hdnSelectedSource1').val()) == "") {
+                    alert("Please enter the From Location");
+                    return false;
+                }
+                if ($.trim($('#hdnSelectedDestination1').val()) == "") {
+                    alert("Please enter the To Location");
+                    return false;
+                }
+
+                if ($.trim($('#txtDOJ1').val()) == "") {
+                    alert("Please Select the Depart Date");
+                    return false;
+                }
+
+                var SearchI1 = {
+                    Source: $.trim($('#hdnSelectedSource1').val()),
+                    SourceName: $.trim($('#txtSource1').val()),
+                    Destination: $.trim($('#hdnSelectedDestination1').val()),
+                    DestinationName: $.trim($('#txtDestination1').val()),
+                    JourneyDate: $.trim($('#txtDOJ1').val()),
+                }
+                Search += "," + JSON.stringify(SearchI1);
+            }
+            if ($('#divmul-2').is(':visible')) {
+                if ($.trim($('#hdnSelectedSource2').val()) == "") {
+                    alert("Please enter the From Location");
+                    return false;
+                }
+                if ($.trim($('#hdnSelectedDestination2').val()) == "") {
+                    alert("Please enter the To Location");
+                    return false;
+                }
+
+                if ($.trim($('#txtDOJ2').val()) == "") {
+                    alert("Please Select the Depart Date");
+                    return false;
+                }
+                var SearchI2 = {
+                    Source: $.trim($('#hdnSelectedSource2').val()),
+                    SourceName: $.trim($('#txtSource2').val()),
+                    Destination: $.trim($('#hdnSelectedDestination2').val()),
+                    DestinationName: $.trim($('#txtDestination2').val()),
+                    JourneyDate: $.trim($('#txtDOJ2').val()),
+                }
+                Search += "," + JSON.stringify(SearchI2);
+            }
+            if ($('#divmul-3').is(':visible')) {
+                if ($.trim($('#hdnSelectedSource3').val()) == "") {
+                    alert("Please enter the From Location");
+                    return false;
+                }
+                if ($.trim($('#hdnSelectedDestination3').val()) == "") {
+                    alert("Please enter the To Location");
+                    return false;
+                }
+
+                if ($.trim($('#txtDOJ3').val()) == "") {
+                    alert("Please Select the Depart Date");
+                    return false;
+                }
+                var SearchI3 = {
+                    Source: $.trim($('#hdnSelectedSource3').val()),
+                    SourceName: $.trim($('#txtSource3').val()),
+                    Destination: $.trim($('#hdnSelectedDestination3').val()),
+                    DestinationName: $.trim($('#txtDestination3').val()),
+                    JourneyDate: $.trim($('#txtDOJ3').val()),
+                }
+                Search += "," + JSON.stringify(SearchI3);
+            }
+
+        }
+
+
+        if ($("input[name=trip]:checked").val() == "2" || $("input[name=trip]:checked").val() == '3') {
+
+            if ((flightSearch.getJsDate($('#txtDOJ').val()) > flightSearch.getJsDate($('#txtDOR').val()))) {
+                alert('Return journey date cannot be earlier than onward journey date.');
+                return false;
+            }
+        }
+
+        //if ($("input[name=trip]:checked").val() == '3') {
+        //    if ((parseInt($('#lblAdults').html()) + parseInt($('#lblChildren').html()) + parseInt($('#lblInfants').html())) > 9) {
+        //        alert("Please Select total passengers Lessthan or Equal 9  ");
+        //        return false;
+        //    }
+        //}
+        if ((parseInt($('#lblAdults').html()) + parseInt($('#lblChildren').html()) + parseInt($('#lblInfants').html())) > 9) {
+            alert("Please Select total passengers Lessthan or Equal 9  ");
+            return false;
+        }
+
+        if (parseInt($.trim($('#lblAdults').html())) < parseInt($('#lblInfants').html())) {
+            alert("Please Select Infants Lessthan or Equal to Adults");
+            return false;
+        }
+
+        if ($('input[name=trip]:checked').attr("id") == "ROUND" || $('input[name=trip]:checked').attr("id") == "ROUNDSF") {
+            if ($('#txtDOR').val() != "") {
+                if ((flightSearch.getJsDate($('#txtDOJ').val()) > flightSearch.getJsDate($('#txtDOR').val()))) {
+                    alert('Return journey date cannot be earlier than onward journey date.');
+                    return false;
+                }
+            } else {
+                alert("Please select return date");
+                return false;
+            }
+        }
+
+        if ($("input[name=flightType]:checked").val() == "International") {
+            if ($.trim($('#lblChildren').html()) != "" && (parseInt($('#lblAdults').html()) + parseInt($('#lblChildren').html())) > 9) {
+                alert("Please Select total (Adults + Children) Lessthan or Equal 9 passengers ");
+                return false;
+            }
+        }
+
+        var Mulitflightsearch = "";
+        var Returndate = ($("input[name=trip]:checked").val() == '1') ? $.trim($('#txtDOJ').val()) : $.trim($('#txtDOR').val());
+        if ($("input[name=trip]:checked").val() == "4") {
+            Mulitflightsearch = "[" + Search + "]";
+            Returndate = $.trim($('#txtDOJ').val());
+        }
+        var SourceCountry = $('#txtSource').val().split('-')[0].split(',')[1];
+        var destinationcountry = $('#txtDestination').val().split('-')[0].split(',')[1];
+        var flighttype = $.trim($("input[name=flightType]:checked").val())
+        if ($.trim(SourceCountry) == $.trim(destinationcountry) && $.trim(destinationcountry).toLowerCase() == "india")
+            flighttype = "Domestic";
+        //temparory for Nepla client
+        if (document.location.host == "flylazy.com" || document.location.host == "client4.i2space.co.in" || document.location.host == "mytrip2nepal.com.np") {
+            if ($.trim(SourceCountry) == $.trim(destinationcountry) && $.trim(destinationcountry).toLowerCase() == "nepal")
+                flighttype = "Domestic";
+        }
+        //end
+        var flightsSearchFilter = {
+            Source: $.trim($('#hdnSelectedSource').val()),
+            SourceName: $.trim($('#txtSource').val()),
+            Destination: $.trim($('#hdnSelectedDestination').val()),
+            DestinationName: $.trim($('#txtDestination').val()),
+            JourneyDate: $.trim($('#txtDOJ').val()),
+            ReturnDate: Returndate,
+            TripType: $.trim($("input[name=trip]:checked").val()),
+            FlightType: flighttype,
+            AdultPax: $.trim($('#lblAdults').html()),
+            ChildPax: $.trim($('#lblChildren').html()),
+            InfantPax: $.trim($('#lblInfants').html()),
+            TravelClass: $.trim($('#ddlClass').val()),
+            IsNonStopFlight: ($('#chkDirectFlights').is(":checked")) ? true : false,
+            FlightTimings: $.trim($('#ddlFlightTimings').val()),
+            AirlineName: $.trim($('#ddlAirlines').val()),
+            IsGDS: $("input[id=IsGDS]:checked").val(),
+            MultiFlightsSearch: $("input[name=trip]:checked").val() == "4" ? JSON.parse(Mulitflightsearch) : null
+        };
+
+        window.name = JSON.stringify(flightsSearchFilter);
+        $('#hdnSearchParams').val(JSON.stringify(flightsSearchFilter));
+        var journeyDate = new Date(flightsSearchFilter.JourneyDate.split('-')[2] + '/' + flightsSearchFilter.JourneyDate.split('-')[1] + '/' + flightsSearchFilter.JourneyDate.split('-')[0]);
+        var returnDate = new Date(flightsSearchFilter.ReturnDate.split('-')[2] + '/' + flightsSearchFilter.ReturnDate.split('-')[1] + '/' + flightsSearchFilter.ReturnDate.split('-')[0]);
+        var flightType = ($.trim(flighttype) == "Domestic") ? "D" : "I";
+        var pagename = "SelectFlight";
+        if (value == "Quickflights")
+            pagename = "SelectFlights";
+        window.location.href = pagename + "-" + flightsSearchFilter.Source + "-"
+            + flightsSearchFilter.Destination + "-"
+            + (($("input[name=trip]:checked").val() == '1') ? $.datepicker.formatDate("dd-M-yy", journeyDate) : $.datepicker.formatDate("dd-M-yy", journeyDate) + "-" + $.datepicker.formatDate("dd-M-yy", returnDate))
+            + "?FT=" + flightType
+            + "&TT=" + $.trim($("input[name=trip]:checked").val())
+            + "&Adt=" + $.trim($('#lblAdults').html())
+            + "&Chd=" + $.trim($('#lblChildren').html())
+            + "&Inf=" + $.trim($('#lblInfants').html())
+            + "&Cls=" + $.trim($('#ddlClass').val())
+            ;
+        return false;
+    },
+    getJsDate: function (selectedDate) {
+        return new Date(selectedDate.split('-')[2], parseInt(selectedDate.split('-')[1]) - 1, selectedDate.split('-')[0]);
+    }
+};
+function AddPax(i, e) {
+
+    if (e == "Adults") {
+        if ((parseInt($('#lblAdults').html()) > 0) && (parseInt($('#lblAdults').html()) <= 9)) {
+            var value = (parseInt($('#lblAdults').html()) + parseInt(i));
+            if (value > 0 && value <= 9)
+                $('#lblAdults').html(value);
+        }
+    }
+    else if (e == "Children") {
+        if ((parseInt($('#lblChildren').html()) >= 0) && (parseInt($('#lblChildren').html()) <= 9)) {
+            var value = (parseInt($('#lblChildren').html()) + parseInt(i));
+            if (value >= 0 && value <= 9)
+                $('#lblChildren').html(value);
+        }
+
+    } else if (e == "Infants") {
+        if ((parseInt($('#lblInfants').html()) >= 0) && (parseInt($('#lblInfants').html()) <= 9)) {
+            var value = (parseInt($('#lblInfants').html()) + parseInt(i));
+            if (value >= 0 && value <= 9)
+                $('#lblInfants').html(value);
+        }
+
+    }
+    var paxtotal = "No of Travellers " + (parseInt($('#lblInfants').html()) + parseInt($('#lblChildren').html()) + parseInt($('#lblAdults').html()))
+    $('#spnflightpx').html("");
+    $('#spnflightpx').html(paxtotal);
+}
+
+    </script>
+</head>
+<body>
+    <form method="post" action="./SearchFlights" id="form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJMjMxNzg4Mjk2DxYCHhNWYWxpZGF0ZVJlcXVlc3RNb2RlAgEWAmYPZBYEAgEPZBYCAgIPFgIeBGhyZWYFRy8vYWpheC5nb29nbGVhcGlzLmNvbS9hamF4L2xpYnMvanF1ZXJ5dWkvMS44L3RoZW1lcy9zdGFydC9qcXVlcnktdWkuY3NzZAIDD2QWEAIFDxYCHgdWaXNpYmxlaBYCAgEPFgIfAmgWAgIBDxYCHglpbm5lcmh0bWwFA1JzLmQCBg9kFgJmDxBkDxYBZhYBEAUDSU5SBQNJTlJnZGQCBw8WAh4Dc3JjZGQCDA9kFgICAQ9kFgJmDxYCHwJoZAINDxYCHwJnZAIODxYCHwJnZAIQDxYCHwEFTWh0dHBzOi8vd3d3LmZhY2Vib29rLmNvbS9FYXJseWZhcmVzY29tLTQyNzE3NTkzNDc2NDMyMi8/bW9kYWw9YWRtaW5fdG9kb190b3VyZAIVDxYCHwEFFnN1cHBvcnRAZWFybHlmYXJlcy5jb21kZHRZQtjasM16u40l/iAZR0nhWGjChCH+h5C19mFZQbBf" />
+</div>
+
+<div class="aspNetHidden">
+
+    <input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="EA5EF949" />
+    <input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAAZTLMhJ+8Hu0lTldVzBWu5/vopCxU8HVFbs2fu2jicGe656O2lv62UbwLYqvj1iKIsuX80+RT3RavdWeikW1j/51T9NbT+0igpTIZja4m5KJlVA1hvm6bfemmkKkUdhdPpZD+JMd59dSztS5XaWZZ+QPWTMv4w03YU1Mo1c7zraNw==" />
+</div>
+
+        <input type="hidden" name="ctl00$hdnlanguages" id="hdnlanguages" value="en" />
+        <input type="hidden" id="hdncurrency" value="1" title="INR" />
+        <label id="scroll" onclick="moveUp();"><i class="fa fa-chevron-up"></i></label>
+        <span id="mainDiv" class="loadingBackground" style="display: none"></span><span style="top: 30%; display: none;" class="modalContainer" id="overlaywhenLoading">
+            <div class="registerhead" align="center">
+                <div class="divprogressrel common">
+                    <h4>Processing... Please wait!</h4>
+                    <div id="serviceslider">
+                        <ul>
+                            <li>
+                                <img src="images/icons/isswait.png" /></li>
+                            <li>
+                                <img src="images/icons/isslike.png" /></li>
+                            <li>
+                                <img src="images/icons/issbook.png" /></li>
+                        </ul>
+                    </div>
+
+                    <div id="spinningSquaresG">
+                        <div id="spinningSquaresG_1" class="spinningSquaresG"></div>
+                        <div id="spinningSquaresG_2" class="spinningSquaresG"></div>
+                        <div id="spinningSquaresG_3" class="spinningSquaresG"></div>
+                        <div id="spinningSquaresG_4" class="spinningSquaresG"></div>
+                        <div id="spinningSquaresG_5" class="spinningSquaresG"></div>
+                        <div id="spinningSquaresG_6" class="spinningSquaresG"></div>
+                        <div id="spinningSquaresG_7" class="spinningSquaresG"></div>
+                        <div id="spinningSquaresG_8" class="spinningSquaresG"></div>
+                    </div>
+                </div>
+            </div>
+        </span>
+        <div class="divmain center divtop divshadow" id="divsessionexpiry" style="display: none">
+            <input type="hidden" name="ctl00$hdnuserrole" id="hdnuserrole" value="Guest" />
+            <div class="divsubmain">
+                <p class="ssexpaire">Session Expired</p>
+                <img src="images/session-exp.png">
+                <div class="divtitle">Time Out</div>
+                <div class="divtitle2">
+                    Still interested in Searching from the same service?<p>Please recheck Fare &amp; Availability of your selected service(s) as fares are dynamic and subject to change.</p>
+                </div>
+                <div class="sesbtns">
+                    <div class="divcloseme">
+                        <label for="lblname" id="divclosesession" class="btn btn-primary">Back to Search Results</label>
+                    </div>
+                    <div class="divcloseme" style="display: none;">
+                        <label for="lblname" id="LatestFares" style="background: #f54b06; color: #fff; border: 1px solid #f54b06;">Check Latest Fares</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="ctl00$hdnNotifications" id="hdnNotifications" value="[]" />
+        <input type="hidden" name="ctl00$hdnHolidayPackages" id="hdnHolidayPackages" />
+        <div id="etrloader" class="d-none">
+    
+            <div id="etrloadbar"></div>
+            <div id="etrloading"><div></div><div></div></div>
+            <div id="etrloadtxt">LOADING !!</div>
+        
+</div>
+        <div>
+            
+            <div style="width: 100%; display: table; background: linear-gradient(rgb(255, 255, 255) 0px, rgb(227, 228, 228) 100%) 0px 0px repeat scroll rgba(0, 0, 0, 0);">
+                
+            </div>
+            
+            <!--body tagg-->
+            
+            
+            
+            <section id="container" class="bg-light">
+                
+    <span id="ContentPlaceHolder1_lblErrorMsg" class="errorMsg"></span>
+    <div id="ContentPlaceHolder1_content12">
+        <div id="view-wrapper">
+            <div id="slideshow">
+                <div class="flexslider">
+                    <div class="flexslider  bgfl" id="banner">
+                    </div>
+                </div>
+            </div>
+            <section class="search-panel template flights">
+                <div style="display: none;">
+                    <input type="radio" id="ROUNDSF" class="d-none" name="trip" value="3" />
+                    
+                    <input id="rbOneWay" checked="checked" name="triptype" type="radio" value="1" />
+                    <input type="checkbox" id="chkDirectFlights" />
+                    <a href="#" id="aSpecial" class="small-button silver segmented-middle">Special Fare</a>
+                    
+                </div>
+                <div class="search-box ">
+                    <div class="bg-darktrans">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <ul class="list-unstyled list-inline my-2">
+                                        
+                                        <li class="active list-inline-item" id="aDomesticf">
+                                            <a>
+                                                <input type="radio" class="d-none" id="Domestic" name="flightType" checked="checked" value="Domestic" />
+                                                <label class="light" for="rbtnfdom">Domestic</label>
+                                            </a>
+                                        </li>
+                                        
+                                        <li id="aInternationalf" class="list-inline-item">
+                                            <a>
+                                                <input type="radio" class="d-none" id="International" name="flightType" value="International" />
+                                                <label class="light" for="rbtnfint">International</label>
+                                            </a>
+                                        </li>
+                                        
+                                        <li class="active list-inline-item" id="aOneway">
+                                            <a>
+                                                <input type="radio" class="d-none" id="ONE" name="trip" value="1" checked="checked" />
+                                                <label class="light" for="rbtnfst">One Way</label>
+                                            </a>
+                                        </li>
+                                        <li id="aRound" class="list-inline-item">
+                                            <a>
+                                                <input type="radio" class="d-none" id="ROUND" name="trip" value="2" />
+                                                <label class="light" for="rbtnfrt">Round Trip</label>
+                                            </a>
+                                        </li>
+                                        
+                                    </ul>
+
+                                </div>
+
+                                <div class="col-md-12 form-group">
+                                    <div class="search-group source">
+                                        <input type="text" etitle="airports" id="txtffcb" placeholder="Select Origin">
+                                       
+                                    </div>
+                                    <div class="search-group source">
+                                        <input type="text" id="txtftcb" name="txtDestination" e>
+                                        
+                                    </div>
+                                    <div class="search-group date">
+                                        <input type="text" id="txtDOJ" placeholder="depart date" class="datepicker form-control" tabindex="3" readonly="readonly" onfocus="this.select(); " onclick="this.select();" />
+                                    </div>
+                                    <div class="search-group date">
+                                        <input id="txtDOR" name="txtDOR" placeholder="return date" type="text" disabled="disabled" class="datepicker1 form-control" tabindex="4" readonly="readonly" onfocus="this.select(); " onclick="this.select();" />
+                                    </div>
+                                    <div class="search-group misc">
+                                        <label id="flightsDesc" class="form-control" onclick="$('#flightsMisc').toggle();">1 Traveller, Economy</label>
+                                        <div id="flightsMisc" style="display: none;">
+                                            <select id="ddlClass" class="form-control ui-autocomplete-input">
+                                                <option value="E">Economy </option>
+                                                <option value="B">Business</option>
+                                                <option value="F">First Class</option>
+                                                <option value="ER">Premium Economy</option>
+                                            </select>
+
+                                            <div class="row" style="overflow: hidden;">
+                                                <div class="col-md-12 my-1">
+                                                    <div class="trvlabel">Adults <span>+12</span></div>
+                                                    <div class="divCounter">
+                                                        <div class="btn btn-sm" type="button" onclick="AddPax('-1','Adults');setFlightsMisc();">-</div>
+                                                        <div class="count">
+                                                            <label id="lblAdults">1</label>
+                                                        </div>
+                                                        <div class="btn btn-sm" type="button" onclick="AddPax('1','Adults');setFlightsMisc();">+</div>
+                                                    </div>
+
+                                                </div>
+                                                <div class="col-md-12 my-1">
+                                                    <div class="trvlabel">Children<span> 2-12</span></div>
+                                                    <div class="divCounter">
+                                                        <div class="btn btn-sm" type="button" onclick="AddPax('-1','Children');setFlightsMisc();">-</div>
+                                                        <div class="count">
+                                                            <label id="lblChildren">0</label>
+                                                        </div>
+                                                        <div class="btn btn-sm" type="button" onclick="AddPax('1','Children');setFlightsMisc();">+</div>
+                                                    </div>
+
+                                                </div>
+                                                <div class="col-md-12 mt-1">
+                                                    <div class="trvlabel">Infants <span>under 2</span></div>
+                                                    <div class="divCounter">
+                                                        <div class="btn btn-sm" type="button" onclick="AddPax('-1','Infants');setFlightsMisc();">-</div>
+                                                        <div class="count">
+                                                            <label id="lblInfants">0</label>
+                                                        </div>
+                                                        <div class="btn btn-sm" type="button" onclick="AddPax('1','Infants');setFlightsMisc();">+</div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <label class="btn btn-danger float-right btn-sm mt-2" onclick="$('#flightsMisc').toggle();">CLOSE</label>
+                                        </div>
+                                    </div>
+                                    <div class="search-group search">
+                                        <button class="btn btn-primary col-md-12" onclick="return flightSearch.validateSearch();">SEARCH</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+        </div>
+
+
+
+
+
+        
+        <div style="display: none">
+            
+            
+            
+            
+        </div>
+        
+    </div>
+    <div id="clr">
+    </div>
+    <script type="text/javascript">
+        $('#aDomesticf').click(function () {
+            $('#divgds').hide();
+            $('#divmuityadd').hide();
+            $('#aMultyCity').hide();
+            $('.cls-mlty').show();
+            $('#divmulti-city').hide();
+
+            $('#Domestic').attr({ checked: true });
+            $('#hdnSelectedSource').val('');
+            $('#hdnSelectedDestination').val('');
+            $('#txtDestination').val('');
+            $('#txtSource').val('');
+            //   GetDomesticAirlineNames();
+            flightSearch.bindAdults(10);
+        });
+        $('#aInternationalf').click(function () {
+            $('#divgds').show();
+            $('.cls-mlty').show();
+
+
+
+            $('#International').attr({ checked: true });
+
+            if ($('input[name=trip]:checked').attr("id") == "ROUND") {
+                $('#ROUND').attr({ checked: true });
+                $('#txtDOR').removeAttr('disabled');
+            } else {
+                $('#ONE').attr({ checked: true });
+                $('#aOneway').addClass('radiobnsselected');
+                $('#txtDOR').attr('disabled', 'disabled');
+            }
+            $('#hdnSelectedSource').val('');
+            $('#hdnSelectedDestination').val('');
+            $('#txtDestination').val('');
+            $('#txtSource').val('');
+            GetInternationalAirlineNames();
+            flightSearch.bindAdults(7);
+        });
+        $('#aMultyCity').click(function () {
+            $('#aMultyCity').addClass('selected');
+            $('#aSpecial').removeClass('selected');
+            $('#aOneway').removeClass('selected');
+            $('#aRound').removeClass('selected');
+            $('#aRound').removeClass('selected');
+            $('#MultiCity').attr({ checked: true });
+            $('#aInternational').addClass('selected');
+            $('#aDomestic').removeClass('selected');
+            $('#International').attr({ checked: true });
+            $('#divmuityadd').show();
+            $('#divReturn').hide();
+            $('div[id*=divmul]').hide();
+            $('#divmuitydel-1').hide();
+            $('#divmulti-city').show();
+
+
+        });
+
+        $('#aOneway').click(function () {
+
+            $('#ONE').attr({ checked: true });
+            $('#txtDOR').attr('disabled', 'disabled');
+            $('#divmuityadd').hide();
+            $('#divmulti-city').hide();
+
+        });
+        $('#aRound').click(function () {
+
+            $('#ROUND').attr({ checked: true });
+            $('#txtDOR').removeAttr('disabled');
+            $('#divmuityadd').hide();
+            $('#divmulti-city').hide();
+        });
+        $('#aSpecial').click(function () {
+            $('#aRound').removeClass('selected');
+            $('#aOneway').removeClass('selected');
+            $('#aSpecial').addClass('selected');
+            $('#aMultyCity').removeClass('selected');
+            $('#aInternational').removeClass('selected');
+            $('#aDomestic').addClass('selected');
+            $('#ROUNDSF').attr({ checked: true });
+            $('#Domestic').attr({ checked: true });
+            $('#divmuityadd').hide();
+            $('#divReturn').show();
+            $('#divmulti-city').hide();
+        });
+
+
+        $('#ddlAdults').change(function () {
+            var pax = parseInt($('#ddlAdults').val()) + parseInt($('#ddlChildren').val()) + parseInt($('#ddlInfants').val());
+            $('#spanPax').html(pax + ' Person(s)');
+            $('#divPax').hide();
+        });
+        $('#ddlChildren').change(function () {
+            var pax = parseInt($('#ddlAdults').val()) + parseInt($('#ddlChildren').val()) + parseInt($('#ddlInfants').val());
+            $('#spanPax').html(pax + ' Person(s)');
+        });
+        $('#ddlInfants').change(function () {
+            var pax = parseInt($('#ddlAdults').val()) + parseInt($('#ddlChildren').val()) + parseInt($('#ddlInfants').val());
+            $('#spanPax').html(pax + ' Person(s)');
+        });
+        $('#ddlClass').change(function () {
+
+            $('#spanFare').html((($('#ddlClass').val() == 'E') ? 'Lowest' : ($('#ddlClass').val() == 'ER') ? 'Refundable' : 'Business'));
+            $('#divClassType').hide();
+            setFlightsMisc();
+        });
+        $('#ddlFlightTimings').change(function () {
+            $('#spanFlightTime').html($('#ddlFlightTimings').val().replace('.00', '').replace('.00', ''));
+            $('#divTime').hide();
+
+        });
+        $('#ddlAirlines').change(function () {
+            $('#spanAirline').html(($('#ddlAirlines').val() != 0) ? $('#ddlAirlines').val() : 'Pref.Airline');
+            $('#divPerfAirline').hide();
+        });
+        function setFlightsMisc() {
+            var paxCount = parseInt($('#lblAdults').html()) + parseInt($('#lblChildren').html()) + parseInt($('#lblInfants').html());
+            var paxClassSelected = $('#ddlClass option:selected').text();
+            $('#flightsDesc').html((paxCount > 1 ? (paxCount + " Travellers") : (paxCount + " Traveller")) + ", " + paxClassSelected);
+        }
+    </script>
+    <script type="text/javascript">
+        $(function () {
+            fnLoadBanner('divBanners');
+            ServiceActive();
+            $("input").live("keypress", function (keyarg) {
+                if (keyarg.keyCode == 13) { //Enter keycodex
+                    return false;
+                }
+            });
+
+            var dateToday = new Date();
+
+            $(".datepicker").datepicker({
+                dateFormat: 'dd-mm-yy',
+                numberOfMonths: 1,
+                /*showOn: 'both',*/
+                /*buttonImage: 'images/calender.jpg',
+                buttonImageOnly: true,*/
+                showAnim: 'fadeIn',
+                minDate: dateToday,
+                onSelect: function (dateStr) {
+
+                    var min = $(this).datepicker('getDate') || new Date();
+                    var max = new Date();
+                    var datenow = new Date()
+
+                    max.setMonth(datenow.getMonth() + 12); // Add 2 months
+                    // min.setDate(min.getDate() + 1);
+                    $(".datepicker1").datepicker('option', { minDate: min, maxDate: max });
+                },
+                onClose: function () {
+                    if ($("input[name=trip]:checked").val() == "2")
+                        $(".datepicker1").datepicker('show');
+                }
+            });
+
+            $(".datepicker1").datepicker({
+                dateFormat: 'dd-mm-yy',
+                /*showOn: "button",*/
+                numberOfMonths: 1,
+                /*buttonImage: "images/calender.jpg",
+                buttonImageOnly: true,*/
+                showAnim: 'fadeIn',
+                /*showOn: 'both',*/
+                minDate: +0
+            });
+
+          
+
+            flightSearch.bindAdults(10);
+
+            $('input[name=trip]').change(function () {
+                //single trip
+                if ($("input[name=trip]:checked").val() == '1')
+                    $('#trReturn').hide();
+                //round trip
+                if ($("input[name=trip]:checked").val() == '2' || $("input[name=trip]:checked").val() == '3')
+                    $('#trReturn').fadeIn();
+            });
+
+            GetDomesticAirlineNames();
+
+            $('input[name=flightType]').change(function () {
+                $('#hdnSelectedSource').val('');
+                $('#hdnSelectedDestination').val('');
+                $('#txtDestination').val('');
+                $('#txtSource').val('');
+                //International
+                if ($("input[name=flightType]:checked").val() == 'International') {
+                    $('#lblRoundSF').hide();
+                    $('#ROUNDSF').hide();
+                    $('input[name=trip]')[0].checked = "checked";
+                    GetInternationalAirlineNames();
+                    flightSearch.bindAdults(7);
+                }
+                //Domestic
+                if ($("input[name=flightType]:checked").val() == 'Domestic') {
+                    $('#lblRoundSF').fadeIn();
+                    $('#ROUNDSF').fadeIn();
+                    GetDomesticAirlineNames();
+                    flightSearch.bindAdults(10);
+                }
+            });
+        });
+
+        function fnclear2() {
+            if ($("#txtSource").val() == "City or Airport") {
+                $("#txtSource").val('');
+            }
+
+        }
+        function fnclear1() {
+            if ($("#txtDestination").val() == "City or Airport") {
+                $("#txtDestination").val('');
+            }
+        }
+    </script>
+    <script type="text/javascript">
+        flightSearch.loadAirports();
+
+        //if ($.cookie('FlightsSourceId') != null) { $('#hdnSelectedSource').val($.cookie('FlightsSourceId')); }
+        //if ($.cookie('FlightsSourceName') != null) { $('#txtSource').val($.cookie('FlightsSourceName')); }
+        //if ($.cookie('FlightsDestinationId') != null) { $('#hdnSelectedDestination').val($.cookie('FlightsDestinationId')); }
+        //if ($.cookie('FlightsDestinationName') != null) { $('#txtDestination').val($.cookie('FlightsDestinationName')); }
+        //if ($.cookie('FlightType') != null) {
+        //    $(':radio[value="' + $.cookie('FlightType') + '"]').attr('checked', 'checked');
+        //    if ($.cookie('FlightType') == "International") {
+        //        $('#aDomestic').removeClass('selected');
+        //        $('#aInternational').addClass('selected');
+        //    } else {
+        //        $('#aDomestic').addClass('selected');
+        //        $('#aInternational').removeClass('selected');
+        //    }
+        //    //International
+        //    if ($("input[name=flightType]:checked").val() == 'International') {
+        //        $('#lblRoundSF').hide();
+        //        $('#ROUNDSF').hide();
+        //        $('input[name=trip]')[0].checked = "checked";
+        //        GetInternationalAirlineNames();
+        //    }
+        //    //Domestic
+        //    if ($("input[name=flightType]:checked").val() == 'Domestic') {
+        //        $('#lblRoundSF').fadeIn();
+        //        $('#ROUNDSF').fadeIn();
+        //        GetDomesticAirlineNames();
+        //    }
+        //}
+        //if ($.cookie('FlightTripType') != null) {
+        //    $(':radio[value="' + $.cookie('FlightTripType') + '"]').attr('checked', 'checked');
+        //    if ($.cookie('FlightTripType') == "1") {
+        //        $('#aSpecial').removeClass('selected');
+        //        $('#aRound').removeClass('selected');
+        //        $('#aOneway').addClass('selected');
+        //        $('#divReturn').hide();
+        //    }
+        //    else if ($.cookie('FlightTripType') == "2") {
+        //        $('#aSpecial').removeClass('selected');
+        //        $('#aOneway').removeClass('selected');
+        //        $('#aRound').addClass('selected');
+        //        $('#divReturn').show();
+        //    } else {
+        //        $('#aSpecial').addClass('selected');
+        //        $('#aOneway').removeClass('selected');
+        //        $('#aRound').removeClass('selected');
+        //        $('#divReturn').show();
+        //    }
+        //    if ($("input[name=trip]:checked").val() == '1')
+        //        $('#trReturn').hide();
+        //    //round trip
+        //    if ($("input[name=trip]:checked").val() == '2' || $("input[name=trip]:checked").val() == '3')
+        //        $('#trReturn').fadeIn();
+        //}
+
+
+
+
+
+
+
+        // GetDate();
+
+        // alert(new Date(new Date().toUTCString().substr(0, 25)))
+
+        function GetDate() {
+            var myDate = new Date();
+            CurTime = new Date(myDate);
+            var offset = (new Date().getTimezoneOffset() / 60) * (-1);
+            var utc = CurTime.getTime() + (offset * 60000 * (-1));
+            var serverDate = new Date(utc + (3600000 * offset));
+            var dateString = (serverDate.getMonth() + 1) + "/" + serverDate.getDate() + "/" +
+                serverDate.getFullYear() + " " + serverDate.toLocaleTimeString("en-US", { hour12: true });
+            alert(myDate + '----' + CurTime + '----' + offset + '----' + utc + '----' + serverDate + '----' + dateString);
+        }
+
+
+
+
+        // function to calculate local time
+        // in a different city
+        // given the city's UTC offset
+        function calcTime1(city, offset) {
+
+            // create Date object for current location
+            d = new Date();
+
+            // convert to msec
+            // add local time zone offset 
+            // get UTC time in msec
+            utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+
+            // create new Date object for different city
+            // using supplied offset
+            nd = new Date(utc + (3600000 * offset));
+
+            // return time as a string
+            alert("The local time in " + city + " is " + nd.toLocaleString());
+
+        }
+
+
+        function calcTime(city, offset) {
+
+            // create Date object for current location
+            var date = new Date();
+
+            // convert to msec
+            // add local time zone offset 
+            // get UTC time in msec
+            var utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+
+            // create new Date object for different city
+            // using supplied offset
+            var newDate = new Date(utc + (3600000 * offset));
+
+            // return time as a string
+            return "The local time in " + city + " is " + newDate.toLocaleString();
+        }
+
+        // get Bombay time
+        // (calcTime('Bombay', '+5.5'));
+
+        // get Bombay time
+        // calcTime1('Bombay', '+5.5');
+
+        // get Singapore time
+        //  (calcTime('Singapore', '+8'));
+
+        // get London time
+        // (calcTime('London', '+1'));
+
+
+        // fnget();
+
+        function fnget() {
+            var _date = new Date();
+            _date.getTimezoneOffset();
+            var _helsenkiOffset = 5.5 * 60 * 60000;//maybe 3 [h*60*60000 = ms]
+            var _userOffset = _date.getTimezoneOffset() * 60000; // [min*60000 = ms]
+            var _helsenkiTime = new Date(_date.getTime() + _helsenkiOffset + _userOffset);
+            alert("The local time in " + _helsenkiTime);
+        }
+
+        function ServiceActive() {
+
+             
+
+            $('#divgds').hide();
+            $('#aInternational').removeClass('selected');
+            $('#aDomestic').addClass('selected');
+            $('#Domestic').attr({ checked: true });
+            $('#hdnSelectedSource').val('');
+            $('#hdnSelectedDestination').val('');
+            $('#txtDestination').val('');
+            $('#txtSource').val('');
+            GetDomesticAirlineNames();
+            flightSearch.bindAdults(10);
+            
+        }
+        function fnbulidsearch(arg) {
+            var $main = $('<div/>').addClass("frontbox__row m-show-always");
+            var $sourcemain = $('<div/>').addClass("frontbox__form-field-wrapper m-half-width");
+            var $destnationmain = $('<div/>').addClass("frontbox__form-field-wrapper m-half-width");
+            var $calmain = $('<div/>').addClass("frontbox__form-field-wrapper m-half-width");
+            $main.append($sourcemain);
+            $main.append($destnationmain);
+            $main.append($calmain);
+            var $leftdiv = $('<div/>');
+            $sourcemain.append($leftdiv);
+
+            var $labelsource = $('<label/>').addClass("frontbox__field-label").html("From");
+            var $divsourcetext = $('<div/>').addClass('input-container').append($('<input/>').attr({ type: 'hidden', id: 'hdnSources' + arg, name: 'hdnSources' + arg }))
+                .append($('<input/>').attr({ type: 'hidden', id: 'hdnSources' + arg, name: 'hdnSources' + arg }))
+                .append($('<input/>').attr({ type: 'text', id: 'txtSource' + arg, etitle: 'airports', onfocus: 'this.select();', onclick: 'this.select();', maxlength: '50', title: 'Type the first 3 letters of airport or city name' }).addClass('ui-autocomplete-input')).append($('<div/>').addClass('clear'));
+            $leftdiv.append($labelsource);
+            $leftdiv.append($divsourcetext);
+
+
+            var $rightdiv = $('<div/>');
+            $destnationmain.append($rightdiv);
+
+            var $labelsource = $('<label/>').addClass("frontbox__field-label").html("To");
+            var $divsourcetext = $('<div/>').addClass('input-container').append($('<input/>').attr({ type: 'hidden', id: 'hdnSelectedDestination' + arg, name: 'hdnSelectedDestination' + arg }))
+                .append($('<input/>').attr({ type: 'hidden', id: 'hdnDestinations' + arg, name: 'hdnDestinations' + arg }))
+                .append($('<input/>').attr({ type: 'text', id: 'txtDestination' + arg, etitle: 'airports', onfocus: 'this.select();', onclick: 'this.select();', maxlength: '50', title: 'Type the first 3 letters of airport or city name' }).addClass('ui-autocomplete-input'));
+            $rightdiv.append($labelsource);
+            $rightdiv.append($divsourcetext);
+
+            var $leftcaldiv = $('<div/>');
+            $sourcemain.append($leftcaldiv);
+
+            var $labelsource = $('<label/>').addClass("frontbox__field-label").html("From");
+            var $divsourcetext = $('<div/>').addClass('input-container').append($('<input/>').attr({ type: 'hidden', id: 'hdnSources' + arg, name: 'hdnSources' + arg }))
+                .append($('<input/>').attr({ type: 'hidden', id: 'hdnSources' + arg, name: 'hdnSources' + arg }))
+                .append($('<input/>').attr({ type: 'text', id: 'txtDOJ' + arg, onfocus: 'this.select();', onclick: 'this.select();' }).addClass('datepicker date hasDatepicker')).append($('<div/>').addClass('clear'));
+            $leftcaldiv.append($labelsource);
+            $leftcaldiv.append($divsourcetext);
+            $('#divmulti-city').append($main);
+        }
+        $(".clck1").click(function () { $(".popup1").show(); $(".translayer").show(); });
+        $(".clck1").click(function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            $(".popup1").show();
+            $('html').click(function () {
+                $(".popup1").hide();
+            });
+        });
+    </script>
+
+            </section>
+            
+        </div>
+        <script type="text/javascript">
+            function logout() {
+                //            FB.logout(function () {
+                window.location = "Logout";
+                //            });
+            }
+            $('#RefreshBalance').click(function () {
+                $.ajax(
+                    {
+                        type: "POST",
+                        url: "WebAPIService.asmx/GetUpdatedBalance",
+                        data: '{ }',
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        async: false,
+                        success: function (result) {
+                            var BalanceList = result.d;
+                            if (BalanceList != null && BalanceList.length > 0) {
+                                var BalanceText = BalanceList[0] + (BalanceList[1] > 0 ? "(" + BalanceList[1] + ")" : "");
+                                $('#spnBalance').html(BalanceText);
+                                alert("Balance updated");
+                            }
+                        },
+                        error: function (x, e) {
+
+                        }
+                    }
+                );
+            });
+            $('.b-h-f-head').addClass('ui-state-default ui-corner-top'); //Customer information page headings
+            //buttons in all pages
+            $('.bt_but').addClass('ui-button ui-state-default ui-corner-all ui-button-text-only');
+            $('.mytrip_pnrbtn').addClass('ui-button ui-state-default ui-corner-all ui-button-text-only');
+            //background colors and border colors in footer pages
+            $('.backgroundColor').addClass('ui-state-default');
+            $('.borderColor').addClass('ui-widget-content').css({ 'background': 'none', 'color': 'black' });
+            //Modify search headings
+            $('.chng-ex').addClass('ui-state-default ui-corner-top');
+            $(document).ready(function () {
+                if ($('#hdnNotifications').val() != '') {
+                    var notifications = $.parseJSON($('#hdnNotifications').val());
+                    if (notifications != null && notifications != '' && notifications != '[]') {
+                        var divoffers = $('<div/>').addClass('accordion');
+                        divoffers.append($('<h3/>').html('Offers'));
+                        var uloffers = $('<ul/>').css({ 'list-style-type': 'circle !important' });
+
+                        $.each(notifications, function (i, val) {
+                            if (val.IsOffer && val.Subject != "")
+                                uloffers.append($('<li/>').html(val.Subject + ': ' + val.Details));
+                        });
+
+                        //$('<marquee/>').attr({'behavior':'scroll','direction':'up','scrollamount':'2'}).mouseover(this.stop()).mouseout(this.start()).append(uloffers);
+                        divoffers.append($('<div/>').css({ 'height': '150px', 'overflow-y': 'auto', 'padding-top': '0px' }).append(uloffers));
+                        $('#divOffers').append(divoffers).css({ padding: '1%', width: '48%', float: 'left' });
+
+                        var divnotifications = $('<div/>').addClass('accordion');
+                        divnotifications.append($('<h3/>').html('Notice Board'));
+                        var ulnotifications = $('<ul/>').css({ 'list-style-type': 'circle !important' });
+
+                        $.each(notifications, function (i, val) {
+                            if (!val.IsOffer && val.Subject != "")
+                                ulnotifications.append($('<li/>').html(val.Subject + ': ' + val.Details));
+                        });
+                        divnotifications.append($('<div/>').css({ 'min-height': '150px', 'overflow-y': 'auto', 'padding-top': '0px' }).append(ulnotifications));
+                        $('#divNotifications').append(divnotifications).css({ padding: '1%', width: '48%', float: 'left' });
+                        fnLoadAccordion(0);
+                    }
+                }
+                if ($('#hdnHolidayPackages').val() != '') {
+
+                    var psaurl = 'https://psa.etravos.com/';
+                    var domhpcontainer = $('<div/>').css({});
+                    var inthpcontainer = $('<div/>').css({});
+
+                    domhpcontainer.append($('<h3/>').addClass('text-center').html('Popular Destinations')).append($('<label/>').html('Top destinations in the world .Best places to travel in 2017 selected destinations have just competed for the prestigious title of Best Destinations 2017')).css({});
+                    inthpcontainer.append($('<h3/>').addClass('text-center').html('International Holiday Packages').css({}));
+                    //category id = 2 indicates international holiday package
+                    //category id = 1 indicates domestic holiday package
+                    var holidaypackages = $.parseJSON($('#hdnHolidayPackages').val());
+                    if (holidaypackages != null && holidaypackages != '' && holidaypackages != '[]') {
+                        $.each(holidaypackages, function (index, holiday) {
+                            if (holiday.ShowInHomePage == true) {
+                                var item = $('<div/>').addClass('divhmpk');
+                                var link = $('<a/>').addClass('divhmpa').attr({ 'href': 'javascript:void;' });
+                                $('<img/>').attr({
+                                    'src': psaurl + 'serverdata/HolidayPackageImages/' + holiday.HolidayPackageId + '/Pic1.png',
+                                    'alt': 'special offer -' + holiday.HolidayPackageName
+                                }).addClass('divhmpimg').appendTo(link);
+                                $('<span/>').addClass('divhmpspn').html(holiday.HolidayPackageName.length > 20
+                                    ? (holiday.HolidayPackageName.substring(0, 20) + '....')
+                                    : holiday.HolidayPackageName).appendTo(link);
+                                item.append(link).attr({
+                                    'onclick': 'window.open("http://' +
+                                        window.location.host + '/PackageDetails-' + holiday.HolidayPackageId + '", "_blank");'
+                                });
+                                if (holiday.CategoryId == 1) // indicates domestic hp
+                                    domhpcontainer.append(item);
+                                if (holiday.CategoryId == 2) // indicates international hp  
+                                    inthpcontainer.append(item);
+                            }
+                        });
+                        $('#divDomHolidayPackages').append(domhpcontainer).css({});
+                        $('#divIntHolidayPackages').append(inthpcontainer).css({});
+                    }
+                }
+            });
+            function fnheader() {
+                if ($('#headmenures').hasClass("resmenicon")) {
+                    $('#headmenures').removeClass("resmenicon");
+                    $('#headmenures').addClass("resmeniconb")
+                }
+                else {
+                    $('#headmenures').removeClass("resmeniconb");
+                    $('#headmenures').addClass("resmenicon");
+                }
+            }
+            $(document).ready(function () {
+                $(".barstogel").click(function () {
+                    $("#main-menu").toggle();
+                });
+            });
+            $('#divclosesession').click(function () {
+                var Role = $('#hdnuserrole').val();
+                if (Role == "Agent")
+                    window.location.href = "AgentLogin";
+                else if (Role == "User")
+                    window.location.href = "Login";
+                if (Role == "Guest")
+                    window.location.href = "Index";
+                fnsessionexpiryhide();
+            });
+            $('button[data-dismiss="modal"]').click(function () {
+                $('#divPopup').hide();
+                $('#divPopupFade').hide();
+                $('#divPopupAlert').hide();
+            });
+        </script>
+    </form>
+</body>
+</html>
